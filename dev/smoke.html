@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>engine smoke</title>
+<style>
+  html,body{margin:0;height:100%;background:#070a10;font:12px system-ui}
+  #full{position:absolute;left:0;top:0;right:0;height:62%}
+  #card{position:absolute;left:24px;bottom:24px;width:420px;height:220px;border:1px solid #2a3a4d;border-radius:12px;overflow:hidden}
+  #tiny{position:absolute;right:24px;bottom:24px;width:220px;height:120px;border:1px solid #2a3a4d;border-radius:12px;overflow:hidden}
+</style>
+</head>
+<body>
+<div id="full"></div>
+<div id="card"></div>
+<div id="tiny"></div>
+<script src="../gridpillars.js"></script>
+<script>
+var DATA = [
+  { id:'deepseek', label:'DeepSeek', value:0.86, color:'#4D6BFE' },
+  { id:'kimi',     label:'Kimi',     value:0.62 },
+  { id:'glm',      label:'GLM',      value:0.44 },
+  { id:'qwen',     label:'Qwen',     value:0.71 },
+  { id:'openai',   label:'OpenAI',   value:0.33 },
+  { id:'claude',   label:'Claude',   value:0.58 }
+];
+var errors = [];
+window.addEventListener('error', function(e){ errors.push(String(e.message)); });
+var a = GridPillars.create(document.getElementById('full'), { preset:'models', palette:'deep' });
+var b = GridPillars.create(document.getElementById('card'), { mode:'data', palette:'slate', data:DATA, legend:true, maxHeight:9, ambient:0.07, timeScale:0.8 });
+var c = GridPillars.create(document.getElementById('tiny'), { mode:'ripple', palette:'aurora', autoRotate:false, maxHeight:7 });
+b.on('pick', function(s){ window.__picked = s ? s.id : null; });
+b.select(0, true);
+window.__smoke = {
+  errors: errors,
+  a: a.ok, b: b.ok, c: c.ok,
+  bData: b.getData().length,
+  bMode: b.mode(),
+  aMode: a.mode(),
+  stats: b.stats(),
+  r: Math.round(b.orbit.radius),
+  rTiny: Math.round(c.orbit.radius),
+  cellTiny: c.state.cellSize,
+  cfgLen: JSON.stringify(b.getConfig()).length
+};
+</script>
+</body>
+</html>

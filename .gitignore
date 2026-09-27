@@ -1,0 +1,6 @@
+# 开发时的截图与临时产物
+.dsh/*.png
+node_modules/
+
+Thumbs.db
+desktop.ini

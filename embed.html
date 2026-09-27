@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GridPillars · 嵌入产品示例（ModelOps 控制台）</title>
+<style>
+  /* 这是一个「浅色产品后台」，用来验证 3D 组件能不能融进真实产品界面 */
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --line:#e5e8ee; --line2:#eef1f5;
+    --ink:#111827; --ink2:#4b5563; --muted:#8b94a3; --accent:#4f46e5; --accent-soft:#eef0ff;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+  .topbar{height:56px;background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:22px;padding:0 22px;position:sticky;top:0;z-index:5}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:650;letter-spacing:.01em}
+  .logo i{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#4f46e5,#0ea5e9);display:block}
+  .nav{display:flex;gap:18px;color:var(--ink2);font-size:13.5px}
+  .nav span{cursor:pointer;padding:4px 0;border-bottom:2px solid transparent}
+  .nav span.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12.5px}
+  .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#4f46e5)}
+
+  .shell{display:grid;grid-template-columns:212px 1fr;gap:22px;max-width:1240px;margin:0 auto;padding:22px}
+  .side{position:sticky;top:78px;align-self:start}
+  .side h4{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .side a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;color:var(--ink2);
+    font-size:13.5px;text-decoration:none;cursor:pointer}
+  .side a:hover{background:#eceef3}
+  .side a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+  .grid{display:grid;gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .card .head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+  .card .head h3{margin:0;font-size:14.5px;font-weight:640}
+  .card .head .sub{color:var(--muted);font-size:12.5px}
+  .card .head .spacer{margin-left:auto}
+  .card .body{padding:16px}
+  .pill{font-size:11.5px;padding:3px 9px;border-radius:999px;background:#f1f3f7;color:var(--ink2);border:1px solid var(--line)}
+  .pill.live{background:#e8f7ef;border-color:#c9ead9;color:#0f7a4d}
+  .btn{font:inherit;font-size:12.5px;padding:6px 11px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);cursor:pointer}
+  .btn:hover{background:#f7f8fa}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* 浅色瑞士风：组件与产品卡片同色系，直接融进页面，不再是一个"深色视窗" */
+  .view{position:relative;background:#f4f4f2;border-radius:0;overflow:hidden;border:1px solid var(--line)}
+  .view .hudline{position:absolute;left:14px;top:12px;z-index:3;color:#111;font-size:11.5px;letter-spacing:.02em;pointer-events:none}
+  .view .hudline b{font-weight:600;color:#111}
+  .view .corner{position:absolute;right:12px;top:11px;z-index:3;color:#7c7c78;font:11px/1.4 ui-monospace,monospace;text-align:right;pointer-events:none}
+  #hero3d{height:330px}
+  #w3d{height:300px}
+  .foot{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line2);
+    color:var(--muted);font-size:12.5px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:500;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:0 0 8px;border-bottom:1px solid var(--line2)}
+  td{padding:11px 0;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tr.sel{background:var(--accent-soft)}
+  tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+  td .name{display:flex;align-items:center;gap:9px;font-weight:560}
+  .dot{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+  .bar{height:6px;border-radius:6px;background:#eef0f4;overflow:hidden;min-width:80px}
+  .bar i{display:block;height:100%;border-radius:6px}
+  .num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink2)}
+  .hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+
+  pre{background:#0d1117;color:#d7e3f2;border-radius:10px;padding:14px;overflow:auto;
+    font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0}
+  pre .c{color:#7d8ea3}
+  pre .k{color:#79c0ff}
+  pre .s{color:#a5d6ff}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:#f1f3f7;
+    padding:1px 5px;border-radius:4px}
+
+  @media (max-width:900px){
+    .shell{grid-template-columns:1fr;padding:14px}
+    .side{display:none}
+    .nav{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><i></i>ModelOps</div>
+  <div class="nav">
+    <span>总览</span><span class="on">模型</span><span>调用日志</span><span>成本</span><span>设置</span>
+  </div>
+  <div class="right"><span>us-east-1</span><span class="avatar"></span></div>
+</div>
+
+<div class="shell">
+  <aside class="side">
+    <h4>模型服务</h4>
+    <a class="on">负载总览</a>
+    <a>配额与限流</a>
+    <a>路由策略</a>
+    <h4 style="margin-top:18px">可观测</h4>
+    <a>延迟分布</a>
+    <a>错误率</a>
+  </aside>
+
+  <main class="grid">
+
+    <!-- ① 顶部数据视窗：3D 组件作为页面里的一个可视窗口 -->
+    <section class="card">
+      <div class="head">
+        <h3>集群全景</h3>
+        <span class="sub">实时活动 · 网格即容量，柱高即压力</span>
+        <span class="spacer"></span>
+        <span class="pill live">LIVE</span>
+        <button class="btn" id="pauseHero">暂停</button>
+        <button class="btn" id="posterHero">静帧</button>
+      </div>
+      <div class="view">
+        <div class="hudline"><b>GRID PILLARS</b> · 64×64 活动网格 · 无限延伸</div>
+        <div class="corner" id="heroStats">—</div>
+        <div id="hero3d"></div>
+      </div>
+      <div class="foot">
+        <span>同一个组件、同一套浅色瑞士语言：图表的纸面与产品卡片同色，网格直接成为页面版式的一部分。</span>
+      </div>
+    </section>
+
+    <!-- ② 数据驱动 + 交互联动：点柱子 / 点图例 → 表格选中 -->
+    <section class="card">
+      <div class="head">
+        <h3>各模型实时负载</h3>
+        <span class="sub">柱子高度 = 负载（0–100%）</span>
+        <span class="spacer"></span>
+        <button class="btn primary" id="refresh">刷新数据</button>
+      </div>
+      <div class="view">
+        <div class="hudline">点击柱子或下方图例可选中</div>
+        <div class="corner" id="wStats">—</div>
+        <div id="w3d"></div>
+      </div>
+      <div class="body" style="padding-top:12px">
+        <p class="hint">下面这张表是产品自己的 UI。3D 组件通过 <code>pick</code> 事件把选中的模型交给它 —— 组件只负责"看"，联动由产品决定。</p>
+        <table>
+          <thead><tr><th>模型</th><th>负载</th><th>P95 延迟</th><th>调用量</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ③ 复用方式 -->
+    <section class="card">
+      <div class="head"><h3>嵌入方式</h3><span class="sub">零依赖 · 单文件 · 一段 script 就能用</span></div>
+      <div class="body">
+        <pre><span class="c">&lt;!-- 1. 引入组件（单文件、零依赖、可离线） --&gt;</span>
+&lt;script src=<span class="s">"gridpillars.js"</span>&gt;&lt;/script&gt;
+
+<span class="c">// 2. 挂到任意容器上：自动适配尺寸 / 离屏暂停 / 尊重 reduced-motion</span>
+<span class="k">var</span> gp = GridPillars.create(document.querySelector(<span class="s">'#box'</span>), {
+  mode: <span class="s">'data'</span>, palette: <span class="s">'slate'</span>, legend: <span class="k">true</span>, fit: <span class="k">true</span>, maxDpr: <span class="k">1.75</span>
+});
+
+<span class="c">// 3. 喂数据 + 收点选：柱子高度就是 value</span>
+gp.setData([{ id:<span class="s">'deepseek'</span>, label:<span class="s">'DeepSeek'</span>, value:<span class="s">0.86</span>, color:<span class="s">'#4D6BFE'</span> }, …]);
+gp.on(<span class="s">'pick'</span>, <span class="k">function</span>(item){ selectRow(item &amp;&amp; item.id); });</pre>
+      </div>
+      <div class="foot">
+        <span>生命周期：<code>play() / pause() / resize() / destroy()</code>；配置：<code>getConfig() / applyConfig()</code>；其它：<code>setMode / setPalette / preset / exportPNG</code>。</span>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="gridpillars.js"></script>
+<script>
+(function(){
+  'use strict';
+  if(!window.GridPillars){ document.body.innerHTML = '<p style="padding:24px">gridpillars.js 未加载</p>'; return; }
+
+  var MODELS = [
+    { id:'deepseek', label:'DeepSeek', color:'#4D6BFE', load:0.86, p95:412, calls:'1.24M' },
+    { id:'kimi',     label:'Kimi',     color:'#8B7BF7', load:0.58, p95:528, calls:'642K'  },
+    { id:'glm',      label:'GLM',      color:'#0FB5C9', load:0.46, p95:471, calls:'388K'  },
+    { id:'qwen',     label:'Qwen',     color:'#7C5CF0', load:0.70, p95:455, calls:'905K'  },
+    { id:'openai',   label:'OpenAI',   color:'#10A37F', load:0.33, p95:733, calls:'214K'  },
+    { id:'claude',   label:'Claude',   color:'#D97757', load:0.62, p95:496, calls:'512K'  }
+  ];
+
+  /* ---- ① 顶部全景视窗：只欣赏，不交互 ---- */
+  var hero = GridPillars.create(document.getElementById('hero3d'), {
+    preset:'awaken', palette:'swiss',
+    interactive:false, autoRotate:true, autoRotateSway:true, fit:true, maxDpr:1.75, legend:false
+  });
+
+  /* ---- ② 数据视窗：数据驱动 + 点选联动 ---- */
+  var widget = GridPillars.create(document.getElementById('w3d'), {
+    mode:'data', palette:'swiss', fit:true, legend:true, maxDpr:1.75,
+    dataLayout:'line', dataSpacing:3.0, cellSize:2.4, dataNormalize:true,
+    maxHeight:15, ambient:0, gridGlow:0.22,
+    autoRotate:false, theta:0.22, phi:1.14, targetY:7
+  });
+  widget.setData(MODELS.map(function(m){
+    return { id:m.id, label:m.label, value:m.load, color:m.color };
+  }));
+  widget.on('pick', function(item){ selectRow(item ? item.id : null); });
+
+  /* ---- 产品自己的表格 ---- */
+  var rowsEl = document.getElementById('rows');
+  function buildRows(){
+    rowsEl.innerHTML = '';
+    MODELS.forEach(function(m){
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-id', m.id);
+      tr.innerHTML =
+        '<td><span class="name"><i class="dot" style="background:' + m.color + '"></i>' + m.label + '</span></td>' +
+        '<td><div class="bar"><i style="width:' + Math.round(m.load * 100) + '%;background:' + m.color + '"></i></div>' +
+          '<span class="num">' + Math.round(m.load * 100) + '%</span></td>' +
+        '<td class="num">' + m.p95 + ' ms</td>' +
+        '<td class="num">' + m.calls + '</td>';
+      tr.addEventListener('click', function(){
+        widget.select(MODELS.map(function(x){ return x.id; }).indexOf(m.id));
+        selectRow(m.id);
+      });
+      rowsEl.appendChild(tr);
+    });
+  }
+  var selectedId = null;
+  function selectRow(id){
+    selectedId = (selectedId === id) ? null : id;
+    Array.prototype.forEach.call(rowsEl.children, function(tr){
+      tr.classList.toggle('sel', tr.getAttribute('data-id') === selectedId);
+    });
+  }
+  buildRows();
+
+  /* ---- 模拟数据刷新（真实产品里换成你的接口） ---- */
+  var t = 0;
+  function tick(){
+    t += 0.8;
+    MODELS.forEach(function(m, i){
+      m.load = Math.max(0.06, Math.min(1, m.load * 0.72 + (0.5 + 0.42 * Math.sin(t + i * 1.2)) * 0.28));
+      m.p95 = Math.round(380 + 320 * Math.abs(Math.sin(t * 0.7 + i)));
+    });
+    widget.setData(MODELS.map(function(m){
+      return { id:m.id, label:m.label, value:m.load, color:m.color };
+    }));
+    var r = rowsEl.children;
+    for(var k=0;k<r.length;k++){
+      var bar = r[k].querySelector('.bar i'), num = r[k].querySelector('.num');
+      if(bar) bar.style.width = Math.round(MODELS[k].load * 100) + '%';
+      if(num) num.textContent = Math.round(MODELS[k].load * 100) + '%';
+    }
+    var st = widget.stats();
+    document.getElementById('wStats').textContent = st.fps.toFixed(0) + ' fps · ' + st.pillars + ' pillars';
+  }
+  setInterval(tick, 1800);
+  document.getElementById('refresh').addEventListener('click', tick);
+
+  /* ---- 组件生命周期演示 ---- */
+  var paused = false;
+  document.getElementById('pauseHero').addEventListener('click', function(){
+    paused = !paused;
+    if(paused){ hero.pause(); this.textContent = '继续'; }
+    else { hero.play(); this.textContent = '暂停'; }
+  });
+  document.getElementById('posterHero').addEventListener('click', function(){
+    var hidden = document.getElementById('hero3d').style.visibility === 'hidden';
+    document.getElementById('hero3d').style.visibility = hidden ? '' : 'hidden';
+    this.textContent = hidden ? '静帧' : '恢复';
+    if(hidden) hero.resize();
+  });
+
+  hero.on('stats', function(st){
+    document.getElementById('heroStats').textContent = st.fps.toFixed(0) + ' fps · ' + st.pillars + ' 柱';
+  });
+  widget.on('stats', function(st){
+    document.getElementById('wStats').textContent = st.fps.toFixed(0) + ' fps · ' + st.pillars + ' 柱';
+  });
+
+  /* 容器尺寸变化：组件自带 ResizeObserver，这里演示外部改尺寸 */
+  window.addEventListener('resize', function(){ hero.resize(); widget.resize(); });
+})();
+</script>
+</body>
+</html>
